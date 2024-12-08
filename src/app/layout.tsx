@@ -1,9 +1,12 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter'
+
 import './styles/globals.css'
 
-import Navbar from '../components/Navbar' // Import Navbar component
+import { WalletProvider } from './context/WalletContext' // Import WalletProvider
+
+import Navbar from '../components/Navbar'
 
 const metadata: Metadata = {
   title: 'Staking Platform',
@@ -16,10 +19,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <AppRouterCacheProvider>
-          <Navbar /> {/* Include Navbar */}
-          {children}
-        </AppRouterCacheProvider>
+        <WalletProvider>
+          <AppRouterCacheProvider>
+            <Navbar />
+            {children}
+          </AppRouterCacheProvider>
+        </WalletProvider>
       </body>
     </html>
   )
