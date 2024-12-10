@@ -6,7 +6,7 @@ import { useWallet } from './context/WalletContext' // Import useWallet hook
 
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const HomePage = () => {
   const { address, connectWallet } = useWallet() // Use wallet context
@@ -24,32 +24,34 @@ const HomePage = () => {
   // Function to fetch NFTs owned by the wallet
   const fetchNfts = async (walletAddress: string) => {
     try {
-      const nfts = await getNftsOwnedByAddress(walletAddress)
-      setNfts(nfts)
+      setLoading(true)
+      const fetchedNfts = await getNftsOwnedByAddress(walletAddress)
+      setNfts(fetchedNfts)
     } catch (error) {
       console.error('Error fetching NFTs:', error)
       alert('Failed to fetch NFTs.')
+    } finally {
+      setLoading(false)
     }
   }
 
   const rpcEndpoint = 'https://sentry.tm.injective.network:443'
   const contractAddress = 'inj18p94d9gnrhqu7mrfpcvh6tvja2d207y6qd224s' // Replace with target contract
 
-  const getNftsOwnedByAddress = async (address, limit = 50) => {
+  const getNftsOwnedByAddress = async (address: string, limit = 50) => {
     try {
-      let startAfter = null // Updated with the last token ID in each query
-      let allTokens = []
-      let hasMore = true
-
       const client = await CosmWasmClient.connect(rpcEndpoint)
+      let allTokens: string[] = []
+      let startAfter = null
+      let hasMore = true
 
       while (hasMore) {
         // Define the query
         const query = {
           tokens: {
-            owner: address, // Query all tokens for the specific owner
-            start_after: startAfter, // Start after the last token ID
-            limit: limit, // Limit the number of results per query
+            owner: address,
+            start_after: startAfter,
+            limit: limit,
           },
         }
 
@@ -60,19 +62,16 @@ const HomePage = () => {
 
         // Extract tokens and update state
         const tokens = result.ids || [] // Adjust key if needed
-        allTokens = allTokens.concat(tokens)
+        allTokens = [...allTokens, ...tokens]
 
         // Check if there are more tokens (pagination check)
-        if (tokens.length < limit) {
-          hasMore = false // If fewer tokens than the limit are returned, stop pagination
-        } else {
-          // Use the last token ID as the starting point for the next query
-          startAfter = tokens[tokens.length - 1]
-          console.log('Next startAfter:', startAfter)
-        }
+        hasMore = tokens.length === limit
+        startAfter = tokens[tokens.length - 1]
+
+        console.log('Next startAfter:', startAfter)
 
         // Add a delay to prevent overloading the network
-        await delay(1000) // Adjust delay as needed (e.g., 1000ms = 1 second)
+        await delay(2000) // Increased delay to handle rate limits
       }
 
       console.log('All Tokens:', allTokens)
@@ -117,7 +116,7 @@ const HomePage = () => {
           {nfts.length > 0 ? (
             <ul>
               {nfts.map((nft, index) => (
-                <li key={index}>{nft.title}</li>
+                <li key={index}>{nft.title || nft}</li>
               ))}
             </ul>
           ) : (
