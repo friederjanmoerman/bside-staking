@@ -4,6 +4,10 @@ import React, { useEffect, useState } from 'react'
 import { Box, Typography, CircularProgress, Button } from '@mui/material'
 import { useWallet } from './context/WalletContext' // Import useWallet hook
 
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate'
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 const HomePage = () => {
   const { address, connectWallet } = useWallet() // Use wallet context
   const [loading, setLoading] = useState(false)
@@ -14,6 +18,8 @@ const HomePage = () => {
       fetchNfts(address) // Fetch NFTs when address is available
     }
   }, [address])
+
+  console.log('address: ' + address)
 
   // Function to fetch NFTs owned by the wallet
   const fetchNfts = async (walletAddress: string) => {
@@ -26,12 +32,55 @@ const HomePage = () => {
     }
   }
 
-  // Placeholder: Replace with actual logic to fetch NFTs from the Talis collection
-  const getNftsOwnedByAddress = async (address: string) => {
-    return [
-      { title: 'NFT 1', tokenId: '1' },
-      { title: 'NFT 2', tokenId: '2' },
-    ]
+  const rpcEndpoint = 'https://sentry.tm.injective.network:443'
+  const contractAddress = 'inj18p94d9gnrhqu7mrfpcvh6tvja2d207y6qd224s' // Replace with target contract
+
+  const getNftsOwnedByAddress = async (address, limit = 50) => {
+    try {
+      let startAfter = null // Updated with the last token ID in each query
+      let allTokens = []
+      let hasMore = true
+
+      const client = await CosmWasmClient.connect(rpcEndpoint)
+
+      while (hasMore) {
+        // Define the query
+        const query = {
+          tokens: {
+            owner: address, // Query all tokens for the specific owner
+            start_after: startAfter, // Start after the last token ID
+            limit: limit, // Limit the number of results per query
+          },
+        }
+
+        console.log('Query:', JSON.stringify(query, null, 2))
+
+        // Query the contract
+        const result = await client.queryContractSmart(contractAddress, query)
+
+        // Extract tokens and update state
+        const tokens = result.ids || [] // Adjust key if needed
+        allTokens = allTokens.concat(tokens)
+
+        // Check if there are more tokens (pagination check)
+        if (tokens.length < limit) {
+          hasMore = false // If fewer tokens than the limit are returned, stop pagination
+        } else {
+          // Use the last token ID as the starting point for the next query
+          startAfter = tokens[tokens.length - 1]
+          console.log('Next startAfter:', startAfter)
+        }
+
+        // Add a delay to prevent overloading the network
+        await delay(1000) // Adjust delay as needed (e.g., 1000ms = 1 second)
+      }
+
+      console.log('All Tokens:', allTokens)
+      return allTokens
+    } catch (error) {
+      console.error('Error querying contract:', error)
+      throw new Error('Failed to fetch NFTs')
+    }
   }
 
   return (
