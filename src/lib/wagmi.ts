@@ -17,6 +17,7 @@ export const wagmiConfig = createConfig({
   transports: {
     [berachain.id]: http(),
   },
+  multiInjectedProviderDiscovery: false,
   connectors: [
     injected({
       shimDisconnect: true,
@@ -28,8 +29,8 @@ export const wagmiConfig = createConfig({
       metadata: {
         name: "B Side App Test",
         description: "Stake your NFTs to earn $HONEY",
-        url: "https://bside.app",
-        icons: ["https://bside.app/favicon.ico"],
+        url: "http://localhost:3001. ",
+        icons: ["http://localhost:3001/favicon.ico"],
       },
     }),
   ],

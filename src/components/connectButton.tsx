@@ -1,17 +1,20 @@
-// src/components/ConnectButton.tsx
 "use client"
 
 import { useConnect, useAccount, useDisconnect, useChainId, useSwitchChain } from "wagmi"
-import { Button, Stack, Typography } from "@mui/material"
+import { Button, Stack, Typography, CircularProgress } from "@mui/material"
 
 export default function ConnectButton() {
-  const { connect, connectors } = useConnect()
+  // Grab everything we need from wagmi
+  const { connect, connectors, status } = useConnect()
   const { isConnected, address } = useAccount()
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
 
   const isOnBerachain = chainId === 80085
+
+  // If the hook is in “connecting” state, show a spinner
+  const isConnecting = status === "pending"
 
   return (
     <Stack spacing={2}>
@@ -22,11 +25,9 @@ export default function ConnectButton() {
             variant="contained"
             color="primary"
             onClick={() => connect({ connector })}
-            disabled={!connector.ready || Boolean(connector.connecting)}
+            startIcon={isConnecting && <CircularProgress size={16} />}
           >
             {connector.name}
-            {connector.connecting && " (connecting...)"}
-            {!connector.ready && " (unsupported)"}
           </Button>
         ))
       ) : (
