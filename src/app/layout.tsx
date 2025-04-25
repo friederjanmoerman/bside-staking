@@ -1,6 +1,5 @@
-import "./globals.css"
-import { WagmiProvider } from "wagmi"
-import { wagmiConfig } from "../lib/wagmi"
+import "@/globals.css"
+import Web3Providers from "../components/Web3Providers"
 
 export const metadata = {
   title: "B Side Staking",
@@ -11,7 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
+        <Web3Providers>{children}</Web3Providers>
       </body>
     </html>
   )

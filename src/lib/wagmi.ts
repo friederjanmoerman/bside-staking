@@ -1,5 +1,4 @@
 import { createConfig, http } from "wagmi"
-import { createStorage, cookieStorage } from "wagmi"
 import { defineChain } from "viem"
 
 export const berachain = defineChain({
@@ -26,8 +25,4 @@ export const wagmiConfig = createConfig({
   transports: {
     [berachain.id]: http(),
   },
-  ssr: true,
-  storage: createStorage({
-    storage: cookieStorage,
-  }),
 })
